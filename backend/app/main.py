@@ -52,7 +52,7 @@ def get_db():
 
 
 @app.get("/")
-async def root():
+def root():
     return {"message": "Hello World"}
 
 @app.get("/health")
@@ -83,4 +83,36 @@ def get_note(note_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Note not found"
         )
+    return note
+
+@app.delete("/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_note(note_id: int, db: Session = Depends(get_db)):
+    note = db.get(Note, note_id)
+    
+    if note is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Note not found"
+        )
+    
+    db.delete(note)
+    db.commit()
+    
+    
+@app.put("/notes/{note_id}", response_model=NoteOut, status_code=status.HTTP_200_OK)
+def update_note(note_id: int, note_data: NoteCreate, db: Session = Depends(get_db)):
+    note = db.get(Note, note_id)
+    
+    if note is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Note not found"
+        )
+    
+    note.title=note_data.title
+    note.content=note_data.content
+    
+    db.commit()
+    db.refresh(note)
+    
     return note
