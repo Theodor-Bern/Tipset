@@ -1,55 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, String, Integer, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session, sessionmaker
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.database import Base, engine, get_db
+from app.schemas import NoteCreate, NoteOut
+from app.models import Note
 
 app = FastAPI()
 
-DATABASE_URL = "sqlite:///./notes.db"
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=True,
-)
-
-SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
-    autocommit=False
-)
-class Base(DeclarativeBase):
-    pass
-
-class Note(Base):
-    __tablename__= "notes"
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    title: Mapped[str] = mapped_column(String)
-    content: Mapped[str] = mapped_column(String)
-
 Base.metadata.create_all(bind=engine)
-
-
-class NoteCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=30)
-    content: str = Field(min_length=1, max_length=1000)
-
-class NoteOut(BaseModel):
-    id: int
-    title: str
-    content: str
-    
-    model_config = {"from_attributes": True}
-    
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 @app.get("/")
 def root():
