@@ -2,13 +2,11 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.database import Base, engine, get_db
+from app.database import get_db
 from app.schemas import NoteCreate, NoteOut
 from app.models import Note
 
 app = FastAPI()
-
-Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def root():
